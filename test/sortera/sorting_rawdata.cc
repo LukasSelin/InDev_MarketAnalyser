@@ -3,6 +3,7 @@
 #include <climits>
 #include <string>
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
 int get_length_of_auction(string fil, int number_of_reads){
@@ -15,15 +16,15 @@ int get_length_of_auction(string fil, int number_of_reads){
   return length;
 }
 int find_whole_data(string file){
-  ifstream raw_data{file};
 
+  ifstream raw_data{file};
   raw_data.ignore(133, '{');
   int position = 0;
   int times = 0;
+
   while (true){
 
       for (int a = 0; a < 18; a++){
-
         int past_pos = raw_data.tellg();
         raw_data.ignore(INT_MAX, ',');
         int temp = raw_data.tellg();
@@ -33,14 +34,12 @@ int find_whole_data(string file){
           position = past_pos;
           cout << "Här slutade det i data-delen." << endl;
           break;
-
         }else{
           cout << a << ": Här " << endl;
-
         }
   }
-  times++;
-  raw_data.close();
+    times++;
+    raw_data.close();
   return position;
   }
 }
@@ -48,47 +47,48 @@ int find_whole_data(string file){
 string get_one_auction(string file, int number_of_reads){
 
   ifstream raw_data{file};
-
-  char * buffer = new char [1156];
   string auction;
-  raw_data.read(buffer, 1156);
+  string auction2;
+  size_t position{};
 
   for (int a = 0; number_of_reads >= a; a++){
     raw_data.ignore(INT_MAX, '{');
   }
 
   getline(raw_data, auction, '}');
+  position = auction.find("IP 185.218.131.112.5056");
+
+if (position != string::npos){
+  auction.erase(position, 134);
+  auction.erase(remove(auction.begin(), auction.end(), '\n'), auction.end());
+}else{
+
+}
+  cout << position << '\t';
+
   auction = '{' + auction + '}';
   raw_data.close();
 
-return auction;
+  return auction;
 }
-
 
 void print_sorted_data(string auction){
   ofstream sorted_data;
   sorted_data.open("sorted_data.txt",ios_base::app);
     sorted_data << auction << endl;
   sorted_data.close();
-
 }
 
 void proccess_sorting_data(string fil){
   int number_of_reads = 0;
-   int starting_point = get_length_of_auction(fil, number_of_reads);
-  while (true){
+  ifstream  in_fil{fil};
 
-    ifstream  in_fil{fil};
-    char c = in_fil.peek();
+      while (true){
+        string auction = get_one_auction(fil, number_of_reads);
+        print_sorted_data(auction);
+
+        cout << number_of_reads << endl;
+        number_of_reads++;
+    }
     in_fil.close();
-    if ( c == 'I'){
-      starting_point = get_length_of_auction(fil, number_of_reads);
-    string auction = get_one_auction(fil, starting_point);
-      print_sorted_data(auction);
-      number_of_reads++;
-
-    }else{
-      break;
-    }
-    }
   }
