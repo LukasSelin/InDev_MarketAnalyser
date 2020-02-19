@@ -1,2 +1,3 @@
-# market_analyser
-Carleons Gravegard (CG) A market analyser for Albion Online
+# Albion Market Analyser
+A software that picks out data from raw data and then converts it to a useable format
+
