@@ -35,8 +35,9 @@ namespace AlbionMarketChecker
 
         public static List<string> ListenFromDevice(LivePacketDevice device)
         {
+            
             using (PacketCommunicator communicator =
-                    device.Open(62388, PacketDeviceOpenAttributes.Promiscuous, 1000))
+                    device.Open(65535, PacketDeviceOpenAttributes.Promiscuous, 1000))
             {
                 using (BerkeleyPacketFilter filter = communicator.CreateFilter(filterString))
                 {
@@ -44,8 +45,15 @@ namespace AlbionMarketChecker
                 }
 
                 Console.WriteLine("Listening on " + device.Description + "...");
-
-                communicator.ReceivePackets(0, PacketHandler);
+                Console.WriteLine("Press any key to exit...");
+                bool iskeyPress = true;
+                do
+                {
+                    communicator.ReceivePackets(0, PacketHandler);
+                    
+                    var keyPressed = Console.ReadKey();
+                    iskeyPress = keyPressed.Key == ConsoleKey.Enter;
+                } while (iskeyPress);
                 return auctionList;
             }
         }
@@ -54,36 +62,54 @@ namespace AlbionMarketChecker
         private static List<string> auctionList = new List<string>();
         private static void PacketHandler(Packet packet)
         {
-            var convertedString = packet.Ethernet.IpV4.Udp.Payload.Decode(Encoding.ASCII);
             bool isTrue = true;
-
-            int beginingOfAuction = convertedString.IndexOf('{');
-            string auction = convertedString.Substring(beginingOfAuction);
+            var payload = packet.Ethernet.IpV4.Udp.Payload;
+            string auction = null;
 
             do
             {
                 if (uncompletedAuction == null)
                 {
-                    int endOfAuctionIndex = auction.IndexOf('}');
+
+                    var convertedString = payload.Decode(Encoding.ASCII);
+                    int endOfAuctionIndex = convertedString.IndexOf('}'); ;
+
+                    for (int i = 0; i < auctionList.Count / 3; i++)
+                    {
+                        auction.Substring(endOfAuctionIndex);
+                        endOfAuctionIndex = convertedString.IndexOf('}');
+                    }
+
+                    int startOfAuctionIndex = convertedString.IndexOf('{');
+
                     if (endOfAuctionIndex == -1)
                     {
                         uncompletedAuction = auction;
                         isTrue = false;
+                        Console.WriteLine("Dåre");
+
                     }
                     else
                     {
-                        string completedAuction = auction.Substring(0, endOfAuctionIndex + 1);
-                        auctionList.Add(completedAuction);
+                        endOfAuctionIndex++;
+                        auction = payload.Subsegment(startOfAuctionIndex, endOfAuctionIndex).Decode(Encoding.ASCII);
 
                         // Get remaining data from the packet
+                        auctionList.Add(auction);
                         auction = auction.Substring(endOfAuctionIndex);
+
+                        if (auction == "")
+                        {
+                            uncompletedAuction = auction;
+                            isTrue = false;
+                        }
                     }
                 }
                 else
                 {
-                    var payload = packet.Ethernet.IpV4.Udp.Payload;
                     var splitAuction = payload.Subsegment(44, payload.Decode(Encoding.ASCII).IndexOf('}'));
-                    var completedString = uncompletedAuction + splitAuction;
+                    var completedString = uncompletedAuction + splitAuction.Decode(Encoding.ASCII);
+                    Console.WriteLine("Hej hej");
 
                     uncompletedAuction = null;
                     auctionList.Add(completedString);

@@ -11,6 +11,10 @@ namespace AlbionMarketChecker
         {
             List<string> auctionList = new List<string>();
             auctionList = PacketSniffer.ListenFromDevice(PacketSniffer.SelectDevice());
+            foreach (var auction in auctionList)
+            {
+                Console.WriteLine(auction);
+            }
         }
     }
 }
