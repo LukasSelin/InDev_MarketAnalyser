@@ -19,21 +19,25 @@ namespace AlbionMarketChecker
                 Console.WriteLine("No interfaces found.");
             }
 
-            string menuHeader = "Select a capture device";
+            string menuHeader = allDevcies.Count.ToString();
             List<string> menuContent = new List<string>();
 
             foreach (var device in allDevcies)
             {
-                menuContent.Add(device.Description);
+                Console.WriteLine(device.Description);
+                if (device.Description != null)
+                    menuContent.Add(device.Description);
+                else
+                    menuContent.Add("No description available");
             }
-
+            Console.ReadKey();
             var menu = new Menu(menuContent);
             menu = menu.GetMenu(menu, menuHeader);
 
             return allDevcies[menu.SelectedIndex];
         } // Select device
 
-        public static List<string> ListenFromDevice(LivePacketDevice device)
+        public static List<string> ListenFromDevice(LivePacketDevice device, int port)
         {
             
             using (PacketCommunicator communicator =
@@ -86,8 +90,6 @@ namespace AlbionMarketChecker
                     {
                         uncompletedAuction = auction;
                         isTrue = false;
-                        Console.WriteLine("Dåre");
-
                     }
                     else
                     {
@@ -109,7 +111,6 @@ namespace AlbionMarketChecker
                 {
                     var splitAuction = payload.Subsegment(44, payload.Decode(Encoding.ASCII).IndexOf('}'));
                     var completedString = uncompletedAuction + splitAuction.Decode(Encoding.ASCII);
-                    Console.WriteLine("Hej hej");
 
                     uncompletedAuction = null;
                     auctionList.Add(completedString);

@@ -10,7 +10,8 @@ namespace AlbionMarketChecker
         static void Main(string[] args)
         {
             List<string> auctionList = new List<string>();
-            auctionList = PacketSniffer.ListenFromDevice(PacketSniffer.SelectDevice());
+            var endpoint = PortFinder.SelectPort();
+            auctionList = PacketSniffer.ListenFromDevice(PacketSniffer.SelectDevice(), endpoint.Port);
             foreach (var auction in auctionList)
             {
                 Console.WriteLine(auction);
